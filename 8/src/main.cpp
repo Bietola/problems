@@ -28,19 +28,15 @@ int main() {
 
     inf.close();
     
-    // do it!
-    auto max = std::accumulate(num.begin(), num.end() - 13,
-        std::make_pair(
-            std::accumulate(num.begin(), num.begin() + 13,
-                            1, std::multiplies<>()),
-            num.begin()),
-        
-        [] (const auto max, const auto ele) {
-            auto [acc, itr] = max;
-            auto newAcc = *itr != 0 ?  acc / *itr * *(itr + 13) : 0;
-            return newAcc > acc ? 
-                   std::make_pair(newAcc, itr + 1) :
-                   std::make_pair(acc,    itr + 1);
+    // do it
+    auto max = std::accumulate(num.begin(), num.end() - RANGE, 
+                               std::make_pair(0l, num.begin()),
+        [] (const auto info, const auto ele) {
+            auto [max, itr] = info;
+            auto candidate = std::accumulate(itr, itr + RANGE, 1l, 
+                                             std::multiplies<>());
+            return candidate > max ? std::make_pair(candidate, itr + 1) :
+                                     std::make_pair(max,       itr + 1);
         }
     ).first;
 
