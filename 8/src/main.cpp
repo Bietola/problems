@@ -25,17 +25,27 @@ int main() {
                    std::istream_iterator<char>(),
                    std::back_inserter(num),
                    [] (auto ele) { return (int)(ele - '0'); });
+
+    inf.close();
     
     // do it!
-    auto resPos = std::accumulate(
-        num.begin() + RANGE, num.end(),
-        std::make_pair(num.begin(), num.begin()),
+    auto max = std::accumulate(num.begin(), num.end() - 13,
+        std::make_pair(
+            std::accumulate(num.begin(), num.begin() + 13,
+                            1, std::multiplies<>()),
+            num.begin()),
+        
         [] (const auto max, const auto ele) {
-            return ele > *max.second ?
-                std::make_pair(max.first + 1, max.first) :
-                std::make_pair(max.first + 1, max.second);
+            auto [acc, itr] = max;
+            auto newAcc = *itr != 0 ?  acc / *itr * *(itr + 13) : 0;
+            return newAcc > acc ? 
+                   std::make_pair(newAcc, itr + 1) :
+                   std::make_pair(acc,    itr + 1);
         }
-    );
+    ).first;
+
+    // print it
+    std::cout << max << std::endl;
 
     // exit
     return 0;
