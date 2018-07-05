@@ -6,7 +6,7 @@
 #include <iterator>
 
 const size_t NUM_SIZE = 1000;
-const size_t RANGE = 4;
+const size_t RANGE = 13;
 
 int main() {
     // take it in
@@ -30,10 +30,10 @@ int main() {
     
     // do it
     auto max = std::accumulate(num.begin(), num.end() - RANGE, 
-                               std::make_pair(0, num.begin()),
+                               std::make_pair(0l, num.begin()),
         [] (const auto info, const auto ele) {
             auto [max, itr] = info;
-            auto candidate = std::accumulate(itr, itr + RANGE, 1, 
+            auto candidate = std::accumulate(itr, itr + RANGE, 1l, 
                                              std::multiplies<>());
             return candidate > max ? std::make_pair(candidate, itr + 1) :
                                      std::make_pair(max,       itr + 1);
