@@ -1,24 +1,27 @@
 #include <iostream>
+
 #include <algorithm>
 #include <numeric>
 #include <cmath>
 
+#include "utils.h"
+
 const unsigned int TARGET_SUM = 1000;
 
 int main() {
-    for(int a = 1;; ++a) {
-        for(int b = a;; ++b) {
-            for(int c = 1;; ++c) {
-                if(std::pow(a, 2) + std::pow(b, 2) == std::pow(c, 2) &&
-                   a + b + c == TARGET_SUM) {
-                    std::cout << "found 'em: " << a << ", " << b << ", " << c << std::endl;
-                    return 0;
-                }
-            }
+    std::vector<std::vector<int>> things;
+    std::vector<int> alphabet;
+    std::generate_n(std::back_inserter(alphabet), 100, [n = 1] () mutable {return n++;});
+
+    combs(alphabet, 100, things, {2, 2});
+
+    for(const auto& thing : things) {
+        for(const auto& ele : thing) {
+            std::cout << ele << ", ";
         }
+        std::cout << std::endl;
     }
 
-    std::cout << "did not find 'em..." << std::endl;
-    return -1;
+    return 0;
 }
 
