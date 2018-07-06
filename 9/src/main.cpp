@@ -8,12 +8,25 @@
 
 const unsigned int TARGET_SUM = 1000;
 
+void tripletsTargetSum(int target, std::vector<std::vector<int>>& result) {
+    std::vector<int> alphabet;
+    std::generate_n(std::back_inserter(alphabet), target,
+        [n = 1] () mutable {return n++;});
+
+    combs(alphabet, target, result, {2, 2});
+
+    result.erase(
+        std::remove_if(result.begin(), result.end(), [] (const auto& ele) {
+            auto sum = double(std::pow(ele[0], 2) + std::pow(ele[1], 2));
+            return std::floor(std::sqrt(sum)) != std::sqrt(sum);
+        }),
+        result.end()
+    );
+}
+
 int main() {
     std::vector<std::vector<int>> things;
-    std::vector<int> alphabet;
-    std::generate_n(std::back_inserter(alphabet), 100, [n = 1] () mutable {return n++;});
-
-    combs(alphabet, 100, things, {2, 2});
+    tripletsTargetSum(7, things);
 
     for(const auto& thing : things) {
         for(const auto& ele : thing) {
