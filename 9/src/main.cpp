@@ -1,16 +1,18 @@
+#include <cmath>
+#include <cassert>
 #include <iostream>
-
 #include <algorithm>
 #include <numeric>
-#include <cmath>
 
 #include "utils.h"
 
 const unsigned int TARGET_SUM = 1000;
 
 void tripletsTargetSum(int target, std::vector<std::vector<int>>& result) {
+    assert(target >= 3); 
+
     std::vector<int> alphabet;
-    std::generate_n(std::back_inserter(alphabet), target,
+    std::generate_n(std::back_inserter(alphabet), target - 2,
         [n = 1] () mutable {return n++;});
 
     combs(alphabet, target, result, {2, 2});
@@ -26,8 +28,7 @@ void tripletsTargetSum(int target, std::vector<std::vector<int>>& result) {
 
 int main() {
     std::vector<std::vector<int>> things;
-    tripletsTargetSum(7, things);
-
+    
     for(const auto& thing : things) {
         for(const auto& ele : thing) {
             std::cout << ele << ", ";
