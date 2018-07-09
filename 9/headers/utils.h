@@ -3,6 +3,8 @@
 #include <vector>
 #include <optional>
 
+// function that returns all the possible tuples that add up to target
+// NB: not actually used to solve problem...
 void combs(const std::vector<int>& alphabet, int target,
            std::vector<std::vector<int>>& result,
            // default arguments
