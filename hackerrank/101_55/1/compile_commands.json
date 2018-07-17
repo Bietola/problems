@@ -1,0 +1,7 @@
+[
+{
+  "directory": "/home/dincio/code/cpp/tests/git_submodules/build",
+  "command": "/usr/bin/c++   -I/home/dincio/code/cpp/tests/git_submodules/headers    -std=gnu++1z -o CMakeFiles/Proj.dir/src/main.cpp.o -c /home/dincio/code/cpp/tests/git_submodules/src/main.cpp",
+  "file": "/home/dincio/code/cpp/tests/git_submodules/src/main.cpp"
+}
+]
