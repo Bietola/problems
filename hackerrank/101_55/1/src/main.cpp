@@ -1,9 +1,18 @@
 #include <iostream>
+#include <vector>
 
-#include "utils.h"
+// Complete the swapToSort function below.
+int swapToSort(const std::vector<int>& v) {
+    auto const first = std::is_sorted_until(std::begin(v), std::end(v));
+    if (first != std::end(v)) {
+        
+    }
+    else {
+        return 0;
+    }
+}
 
 int main() {
-    std::cout << greet("world") << std::endl;
 
     return 0;
 }
