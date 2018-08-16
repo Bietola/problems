@@ -1,4 +1,6 @@
-function gcd(lhs, rhs)
+local MAX = 10^9 + 7
+
+local function gcd(lhs, rhs)
     local max = math.max(lhs, rhs)
     local min = math.min(lhs, rhs)
     local div = max / min
@@ -10,7 +12,7 @@ function gcd(lhs, rhs)
     end
 end
 
-function getPairs(seq)
+local function getPairs(seq)
     local res = {{seq[1], 1}}
     for seqi=2,#seq do
         seqv = seq[seqi]
@@ -26,16 +28,26 @@ function getPairs(seq)
     return res
 end
 
-function solve(seq)
+local function solve(seq)
     local num = 0
     for _,pair in ipairs(getPairs(seq)) do
         -- print(string.format("%d,%d:\t%d", v[1], v[2], gcd(v[1], v[2])))
         local pgcd = gcd(pair[1], pair[2]) 
         if pgcd == 1 then
-            num = num + 1
+            num = num + 1 % MAX
         end
     end
-    return num * 2 - 2
+    return (num * 2 - 2) % MAX
 end
 
-print(solve{2, 4, 5})
+-- tests
+io.input("input")
+local fileStr = io.read("a")
+local input = {}
+for numStr in fileStr:gmatch("%d+") do
+    input[#input + 1] = tonumber(numStr)
+end
+
+for _,pairv in getPairs(input) do
+    print(string.format("%d, %d\t%d", pairv[1], pairv[2], 1))
+end
