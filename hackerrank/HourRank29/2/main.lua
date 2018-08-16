@@ -35,7 +35,7 @@ function solve(seq)
             num = num + 1
         end
     end
-    return num * 2
+    return num * 2 - 2
 end
 
 print(solve{2, 4, 5})
