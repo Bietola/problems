@@ -1,7 +1,0 @@
-[
-{
-  "directory": "/home/dincio/code/euler/2/build",
-  "command": "/usr/bin/c++   -I/home/dincio/code/euler/2/headers    -std=gnu++1z -o CMakeFiles/Proj.dir/src/main.cpp.o -c /home/dincio/code/euler/2/src/main.cpp",
-  "file": "/home/dincio/code/euler/2/src/main.cpp"
-}
-]
