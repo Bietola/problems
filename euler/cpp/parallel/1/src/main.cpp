@@ -2,14 +2,13 @@
 #include <iostream>
 #include <vector>
 #include <algorithm>
+#include <typeinfo>
 #include <functional>
 #include <tuple>
 #include <numeric>
 #include <thread>
 #include <chrono>
 #include <optional>
-
-struct empty_type {};
 
 template <class Data> 
 struct void_holder {
@@ -26,17 +25,6 @@ struct void_holder {
         operator Data() const { return _data; }
 };
 
-template <class T>
-std::ostream& operator<<(std::ostream& ostream, const void_holder<T>& toPrint) {
-    if constexpr(std::is_void_v<T>) {
-        ostream << "{void}";
-    }
-    else {
-        ostream << toPrint.get();
-    }
-    return ostream;
-}
-
 template <>
 struct void_holder<void> {
     public:
@@ -45,8 +33,14 @@ struct void_holder<void> {
         const bool is_void() const { return true; }
 };
 
-std::ostream& operator<<(std::ostream& ostream, const void_holder<void>&) {
-    ostream << "{void}";
+template <class T>
+std::ostream& operator<<(std::ostream& ostream, const void_holder<T>& toPrint) {
+    if constexpr(std::is_void_v<T>) {
+        ostream << "{void_holder<void>}";
+    }
+    else {
+        ostream << toPrint.get();
+    }
     return ostream;
 }
 
@@ -69,21 +63,22 @@ void_holder<Result> void_invoke(Fun&& fun, Args&&... args) {
 template <class Result, class TimeRep = double>
 struct execution_info {
     private:
-        using ResultOrVoid = void_holder<Result>;
-
-        ResultOrVoid _result;
+        Result _result;
         std::chrono::duration<TimeRep> _execution_time;
 
     public:
-        execution_info(const ResultOrVoid& result, const std::chrono::duration<TimeRep>& execution_time): _result(result), _execution_time(execution_time) {}
+        execution_info(const Result& result,
+                       const std::chrono::duration<TimeRep>& execution_time):
+            _result(result), _execution_time(execution_time) {}
 
-        void_holder<Result> get_result() const { return _result; }
+        Result get_result() const { return _result; }
         auto get_execution_time() const { return _execution_time; }
 };
 
 template <class Fun, class... Args,
           class Result = std::invoke_result_t<Fun, Args...>>
-execution_info<Result> record_time(Fun&& fun, Args&&... args) {
+execution_info<void_holder<Result>> 
+record_time(Fun&& fun, Args&&... args) {
     namespace chrono = std::chrono;
 
     // start recording time
@@ -98,7 +93,7 @@ execution_info<Result> record_time(Fun&& fun, Args&&... args) {
     auto executionTime = endTime - startTime;
 
     // return function execution info
-    return execution_info<Result>(result, executionTime);
+    return execution_info<void_holder<Result>>(result, executionTime);
 }
 
 auto generate_ints(const size_t num, const size_t limit) {
@@ -115,8 +110,10 @@ int main() {
 
     auto info = record_time([] {
         std::this_thread::sleep_for(chrono::milliseconds(1'000));
-        return 10;
     });
+    // TODO: maybe use deduction guide to make this return the withheld value
+    auto result = info.get_result();
+
     std::cout << "result: " << info.get_result() << "\n";
     std::cout << "time elapsed: " << 
         chrono::duration_cast<chrono::milliseconds>(
