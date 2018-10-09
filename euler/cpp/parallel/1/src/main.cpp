@@ -10,43 +10,23 @@
 #include <chrono>
 #include <optional>
 
-template <class Data> 
-struct void_holder {
-    private:
-        Data _data;
-
-    public:
-        void_holder<Data>(Data&& data): _data(std::forward<Data>(data)) {}
-
-        Data get() const { return _data; }
-
-        const bool is_void() const { return false; }
-
-        operator Data() const { return _data; }
-};
-
-template <>
-struct void_holder<void> {
-    public:
-        void_holder<void>(...) {}
-
-        const bool is_void() const { return true; }
-};
+struct void_type { };
 
 template <class T>
-std::ostream& operator<<(std::ostream& ostream, const void_holder<T>& toPrint) {
-    if constexpr(std::is_void_v<T>) {
-        ostream << "{void_holder<void>}";
-    }
-    else {
-        ostream << toPrint.get();
-    }
-    return ostream;
-}
+struct type_of { using type = T; };
+
+template <class Fun, class... Args>
+struct void_invoke_result : std::invoke_result<Fun, Args...> {};
+
+template <class Fun, class... Args>
+struct void_invoke_result<void> : type_of<void_type> {};
+
+template <class T>
+using void_invoke_result_t = typename void_invoke_result<T>::type;
 
 template <class Fun, class... Args,
-          class Result = std::invoke_result_t<Fun, Args...>>
-void_holder<Result> void_invoke(Fun&& fun, Args&&... args) {
+          class Result = void_invoke_result_t<Fun, Args...>>
+Result void_invoke(Fun&& fun, Args&&... args) {
     // TODO: maybe add macro to avoid repetition of std::invoke
     if constexpr(std::is_void_v<Result>) {
         std::invoke(std::forward<Fun>(fun),
@@ -59,26 +39,30 @@ void_holder<Result> void_invoke(Fun&& fun, Args&&... args) {
     }
 }
 
-// TODO: make it hold a void_holder insted of the direct result type
 template <class Result, class TimeRep = double>
 struct execution_info {
     private:
+        using Duration = std::chrono::duration<TimeRep>;
+
         Result _result;
-        std::chrono::duration<TimeRep> _execution_time;
+        Duration _execution_time;
 
     public:
+        // TODO: find a way to remove this
+        // TODO: optmize for move semantics
         execution_info(const Result& result,
-                       const std::chrono::duration<TimeRep>& execution_time):
+                       const Duration& execution_time):
             _result(result), _execution_time(execution_time) {}
 
+        // getters
         Result get_result() const { return _result; }
         auto get_execution_time() const { return _execution_time; }
 };
 
 template <class Fun, class... Args,
-          class Result = std::invoke_result_t<Fun, Args...>>
-execution_info<void_holder<Result>> 
-record_time(Fun&& fun, Args&&... args) {
+          class Result = void_invoke_result_t<Fun, Args...>>
+execution_info<Result>
+record_execution(Fun&& fun, Args&&... args) {
     namespace chrono = std::chrono;
 
     // start recording time
@@ -86,14 +70,14 @@ record_time(Fun&& fun, Args&&... args) {
 
     // execute function
     //     TODO: write template deduction guide for void 
-    void_holder<Result> result = void_invoke(std::forward<Fun>(fun),
-                                             std::forward<Args>(args)...);
+    Result result = void_invoke(std::forward<Fun>(fun),
+                                std::forward<Args>(args)...);
 
     auto endTime = chrono::system_clock::now();
     auto executionTime = endTime - startTime;
 
     // return function execution info
-    return execution_info<void_holder<Result>>(result, executionTime);
+    return {result, executionTime};
 }
 
 auto generate_ints(const size_t num, const size_t limit) {
@@ -108,7 +92,7 @@ auto generate_ints(const size_t num, const size_t limit) {
 int main() {
     namespace chrono = std::chrono;
 
-    auto info = record_time([] {
+    auto info = record_execution([] {
         std::this_thread::sleep_for(chrono::milliseconds(1'000));
     });
     // TODO: maybe use deduction guide to make this return the withheld value
