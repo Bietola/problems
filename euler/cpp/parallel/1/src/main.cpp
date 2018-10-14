@@ -1,56 +1,10 @@
-#include <ctime>
 #include <iostream>
-#include <vector>
-#include <algorithm>
-#include <typeinfo>
-#include <functional>
-#include <tuple>
-#include <numeric>
-#include <thread>
 #include <chrono>
-#include <optional>
+#include <thread>
+#include <numeric>
+#include <future>
 
-template <class T>
-struct type_of {
-    using type = T;
-};
-
-struct void_type { };
-
-std::ostream& operator<<(std::ostream& ostream, const void_type&) {
-    ostream << "{void_type}";
-    return ostream;
-}
-
-template <class Fun, class = void, class... Args>
-struct void_invoke_result : std::invoke_result<Fun, Args...> {};
-
-template <class Fun, class... Args>
-struct void_invoke_result<Fun,
-                          std::enable_if_t<
-                              std::is_void_v<
-                                  std::invoke_result_t<Fun, Args...>
-                              >
-                          >,
-                          Args...> : type_of<void_type> {};
-
-template <class Fun, class... Args>
-using void_invoke_result_t = typename void_invoke_result<Fun, void, Args...>::type;
-
-template <class Fun, class... Args,
-          class Result = void_invoke_result_t<Fun, Args...>>
-Result void_invoke(Fun&& fun, Args&&... args) {
-    // TODO: maybe add macro to avoid repetition of std::invoke
-    if constexpr(std::is_same_v<Result, void_type>) {
-        std::invoke(std::forward<Fun>(fun),
-                    std::forward<Args>(args)...);
-        return {};
-    }
-    else {
-        return std::invoke(std::forward<Fun>(fun),
-                           std::forward<Args>(args)...);
-    }
-}
+#include "utils/void.h"
 
 template <class Result, class TimeRep = double>
 struct execution_info {
@@ -73,7 +27,7 @@ struct execution_info {
 };
 
 template <class Fun, class... Args,
-          class Result = void_invoke_result_t<Fun, Args...>>
+          class Result = utl::void_invoke_result_t<Fun, Args...>>
 execution_info<Result>
 record_execution(Fun&& fun, Args&&... args) {
     namespace chrono = std::chrono;
@@ -83,7 +37,7 @@ record_execution(Fun&& fun, Args&&... args) {
 
     // execute function
     //     TODO: write template deduction guide for void 
-    Result result = void_invoke(std::forward<Fun>(fun),
+    Result result = utl::void_invoke(std::forward<Fun>(fun),
                                 std::forward<Args>(args)...);
 
     auto endTime = chrono::system_clock::now();
@@ -93,25 +47,41 @@ record_execution(Fun&& fun, Args&&... args) {
     return {result, executionTime};
 }
 
-auto generate_ints(const size_t num, const size_t limit) {
-    std::vector<int> output;
-    std::generate_n(std::back_inserter(output), num,
-                    [limit]() {
-        return rand() % limit;
+// function to test parallelism
+template <class T>
+T random_accumulation(size_t n, size_t max = 1'000,
+                         bool doReserve = false) {
+    std::vector<T> v;
+    if(doReserve) v.reserve(n);
+
+    std::generate_n(std::back_inserter(v), n, [max] {
+        return rand() % max;
     });
-    return output;
+
+    return std::accumulate(std::begin(v), std::end(v), 0);
 }
 
+// MAIN
 int main() {
     namespace chrono = std::chrono;
 
     auto info = record_execution([] {
-        std::this_thread::sleep_for(chrono::milliseconds(1'000));
+            const auto ASYNC_POLICY = std::launch::deferred;
+            // with:    4859, 4684, 5450
+            // without: 1317, 1327, 1324, 1338, 1321
+            // both:    5705, 5495
+            auto result1 = std::async(ASYNC_POLICY,
+                                      &random_accumulation<int>, 10'000'000,
+                                      1'000, false);
+            auto result2 = std::async(ASYNC_POLICY,
+                                      &random_accumulation<int>, 10'000'000,
+                                      1'000, false);
+            return result1.get() + result2.get();
     });
     // TODO: maybe use deduction guide to make this return the withheld value
     auto result = info.get_result();
 
-    std::cout << "result: " << info.get_result() << "\n";
+    std::cout << "result: " << result << "\n";
     std::cout << "time elapsed: " << 
         chrono::duration_cast<chrono::milliseconds>(
             info.get_execution_time()
@@ -119,27 +89,3 @@ int main() {
 
     return 0;
 }
-
-/* int main() { */
-/*     srand(time(NULL)); */
-
-/*     const auto num = 10'000'000; */
-/*     auto ints = std::async( */
-/*         record_duration( */
-/*             generate_ints(num, 100) */
-/*         ) */
-/*     ); */
-/*     auto other_ints = std::async( */
-/*         record_duration( */
-/*             generate_ints(num, 100) */
-/*         ) */
-/*     ); */
-
-/*     const auto sum = std::accumulate(std::begin(ints), std::end(ints), 0); */
-/*     const auto other_sum = std::accumulate(std::begin(other_ints), std::end(other_ints), 0); */
-
-/*     std::cout << sum << '\n'; */
-/*     std::cout << other_sum << '\n'; */
-
-/*     return 0; */
-/* } */
