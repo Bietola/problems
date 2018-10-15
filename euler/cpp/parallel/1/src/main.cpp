@@ -1,33 +1,25 @@
 #include <iostream>
 #include <future>
 
-const size_t LIMIT = 1'000;
+const size_t LIMIT = 1'000'000'000;
 
-int main() {
-    // calculate multiples of 3
-    auto sum3 = std::async(std::launch::async, [] {
-        int sum = 0;
-        for(int j = 3; j < LIMIT; j += 3) {
+std::future<long long> divisibleBy(long long divisor, size_t limit) {
+    return std::async(std::launch::async, [limit, divisor] {
+        long long sum = 0;
+        for(long long j = divisor; j < limit; j += divisor) {
             sum += j;
         }
         return sum;
     });
+}
 
-    // calculate multiples of 5 and not of 3
-    auto sum5 = std::async(std::launch::async, [] {
-        int sum = 0;
-        for(int j = 5; j < LIMIT; j += 5) {
-            if(j % 3 != 0)
-                sum += j;
-        }
-        return sum;
-    });
+int main() {
+    auto divisibleBy3  = divisibleBy( 3, LIMIT);
+    auto divisibleBy5  = divisibleBy( 5, LIMIT);
+    auto divisibleBy15 = divisibleBy(15, LIMIT);
 
-    // sum things up
-    int sum = sum3.get() + sum5.get();
-
-    // answer
-    std::cout << sum << "\n";
-   
+    std::cout << (divisibleBy3.get() + divisibleBy5.get() - divisibleBy15.get()) << "\n";
+                  
+    // return
     return 0;
 }
