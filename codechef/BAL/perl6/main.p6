@@ -8,20 +8,13 @@
 sub MAIN() {
     constant N = get();
     for 1..N {
-        my ($x, $y, $n, $m) = get().split(" ");
-        solve($x, $y, $n, $m);
+        my ($x, $y, $n, $m) = get().split(" ").map(*.Int);
+        say solve($x, $y, $n, $m) ??  "YES" !! "NO";
     }
 }
 
 sub solve($x, $y, $n, $m) {
-    for 1..$n {
-        for 1..$m {
-            if $x * $n == $y * $m {
-                say "YES";
-                return;
-            }
-        }
-    }
-    say "NO";
-    return 0;
+    my $F = $x gcd $y;
+
+    $m >= $x div $F and $n >= $y div $F;
 }
