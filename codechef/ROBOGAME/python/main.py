@@ -9,7 +9,7 @@ def solve(robofield):
             d += 1
         else:
             if ln != None:
-                if d - todigit(c) <= ln:
+                if d - todigit(c) < ln:
                     return "unsafe"
             d = 0
             ln = todigit(c)
