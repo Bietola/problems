@@ -7,7 +7,7 @@ using ll = long long;
 using pll = pair<ll, ll>;
 using uint = unsigned int;
 
-const uint MAX_DEPTH = 100;
+const uint MAX_DEPTH = 50;
 
 // outputs digitsum
 auto digitsum(ll num, ll sum = 0) {
@@ -18,15 +18,23 @@ auto digitsum(ll num, ll sum = 0) {
 }
 
 // prints: minimum value, minimum num of ops
-pll solve(int n, int d, uint depth = 0) {
-    if (depth > MAX_DEPTH) {
-        return { n, depth };
+pll solve(ll n, ll d, uint depth = 0) {
+    if (depth > MAX_DEPTH || n == 1) {
+        /* cout << n << ", " << depth << endl; */
+        return { n, depth }; // depth is num of ops
     }
-    return min(solve(n + d, d), solve(digitsum(n), d),
-               [] (const auto& lhs, const auto& rhs) {
-                   return lhs.first < rhs.first &&
-                          lhs.second < rhs.second;
-               });
+    else {
+        pll dsumBranch = { n, depth };
+        // only take digitsum branch if it modifies n
+        if (auto cache = digitsum(n); cache != n)
+            dsumBranch = solve(cache, d, depth + 1);
+        return min(solve(n + d, d, depth + 1), dsumBranch,
+                   [] (const auto& lhs, const auto& rhs) {
+                       return lhs.first < rhs.first ||
+                                  (lhs.first == rhs.first &&
+                                   lhs.second < rhs.second);
+                   });
+    }
 }
 
 // MAIN
