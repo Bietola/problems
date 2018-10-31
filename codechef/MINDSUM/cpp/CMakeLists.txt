@@ -7,6 +7,7 @@ project(Proj VERSION 1.0.0 LANGUAGES CXX)
 
 # create target executable
 add_executable(Proj src/main.cpp)
+#! add_executable(Proj src/bfs.cpp)
 
 # include directories
 target_include_directories(Proj

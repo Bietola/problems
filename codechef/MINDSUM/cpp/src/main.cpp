@@ -1,5 +1,6 @@
 #include <iostream>
 #include <utility>
+#include <queue>
 
 using namespace std;
 
@@ -18,23 +19,24 @@ auto digitsum(ll num, ll sum = 0) {
 }
 
 // prints: minimum value, minimum num of ops
-pll solve(ll n, ll d, uint depth = 0) {
-    if (depth > MAX_DEPTH || n == 1) {
-        /* cout << n << ", " << depth << endl; */
-        return { n, depth }; // depth is num of ops
-    }
-    else {
-        pll dsumBranch = { n, depth };
-        // only take digitsum branch if it modifies n
-        if (auto cache = digitsum(n); cache != n)
-            dsumBranch = solve(cache, d, depth + 1);
-        return min(solve(n + d, d, depth + 1), dsumBranch,
-                   [] (const auto& lhs, const auto& rhs) {
-                       return lhs.first < rhs.first ||
-                                  (lhs.first == rhs.first &&
-                                   lhs.second < rhs.second);
-                   });
-    }
+pll solve(ll n, ll d, ll target, ll depth, queue<pll>& q) {
+    // visit node
+    if (n == target)
+        return { target,  depth };
+
+    // add children to queue
+    q.emplace(n + d, depth + 1);
+    q.emplace(digitsum(n), depth + 1);
+
+    // visit next in queue
+    auto nextNode = q.front(); q.pop();
+    return solve(nextNode.first, d, target, nextNode.second, q);
+}
+
+pll solve(ll n, ll d, ll target) {
+    queue<pll> q = {};
+
+    return solve(n, d, target, 0, q);
 }
 
 // MAIN
@@ -45,7 +47,7 @@ int main() {
     for(uint j = 0; j < T; ++j) {
         ll n, d;
         cin >> n >> d;
-        auto solution = solve(n, d);
+        auto solution = solve(n, d, 1);
         cout << solution.first << " " << solution.second << "\n";
     }
 
