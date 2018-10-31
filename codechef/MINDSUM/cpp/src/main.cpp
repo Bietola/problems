@@ -1,6 +1,7 @@
 #include <iostream>
 #include <utility>
 #include <queue>
+#include <array>
 
 using namespace std;
 
@@ -19,35 +20,50 @@ auto digitsum(ll num, ll sum = 0) {
 }
 
 // prints: minimum value, minimum num of ops
-pll solve(ll n, ll d, ll target, ll depth, queue<pll>& q) {
+pll solve(ll n, ll d, ll target, ll depth,
+          queue<pll>& q, array<bool, 9>& visited) {
     // visit node
-    if (n == target)
-        return { target,  depth };
+    cout << n << endl;
+    if (n == target || q.empty()) {
+        cout << "found it! " << target << "; " << depth << endl;
+        return { target, depth };
+    }
 
     // add children to queue
-    q.emplace(n + d, depth + 1);
-    q.emplace(digitsum(n), depth + 1);
+    if (n >= 10) {
+        q.emplace(digitsum(n), depth + 1); cout << "digitsum" << endl; //DB
+        q.emplace(n + d, depth + 1); cout << "add " << d << endl; //DB
+    } 
+    else if (!visited[n - 1]) {
+        visited[n - 1] = true;
+        q.emplace(n + d, depth + 1); cout << "add " << d << endl; //DB
+    }
+    else cout << "visited " << n << endl; //DB
 
     // visit next in queue
     auto nextNode = q.front(); q.pop();
-    return solve(nextNode.first, d, target, nextNode.second, q);
+    return solve(nextNode.first, d, target, nextNode.second, q, visited);
 }
 
-pll solve(ll n, ll d, ll target) {
-    queue<pll> q = {};
+pll solve(ll n, ll d) {
+    queue<pll> q;
+    q.emplace(n, 0);
+    array<bool, 9> visited = { false };
+    ll target = ((n % 3 == 0) && (d % 3 == 0) ? 3 : 1);
 
-    return solve(n, d, target, 0, q);
+    return solve(n, d, target, 0, q, visited);
 }
 
 // MAIN
 int main() {
     uint T;
     cin >> T;
+    T = 1; //DB
 
     for(uint j = 0; j < T; ++j) {
         ll n, d;
         cin >> n >> d;
-        auto solution = solve(n, d, 1);
+        auto solution = solve(n, d);
         cout << solution.first << " " << solution.second << "\n";
     }
 
