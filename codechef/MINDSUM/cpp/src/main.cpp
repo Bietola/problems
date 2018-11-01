@@ -23,22 +23,19 @@ auto digitsum(ll num, ll sum = 0) {
 pll solve(ll n, ll d, ll target, ll depth,
           queue<pll>& q, array<bool, 9>& visited) {
     // visit node
-    cout << n << endl;
-    if (n == target || q.empty()) {
-        cout << "found it! " << target << "; " << depth << endl;
+    if (n == target) {
         return { target, depth };
     }
 
     // add children to queue
     if (n >= 10) {
-        q.emplace(digitsum(n), depth + 1); cout << "digitsum" << endl; //DB
-        q.emplace(n + d, depth + 1); cout << "add " << d << endl; //DB
+        q.emplace(digitsum(n), depth + 1);
+        q.emplace(n + d, depth + 1);
     } 
     else if (!visited[n - 1]) {
         visited[n - 1] = true;
-        q.emplace(n + d, depth + 1); cout << "add " << d << endl; //DB
+        q.emplace(n + d, depth + 1);
     }
-    else cout << "visited " << n << endl; //DB
 
     // visit next in queue
     auto nextNode = q.front(); q.pop();
@@ -46,8 +43,7 @@ pll solve(ll n, ll d, ll target, ll depth,
 }
 
 pll solve(ll n, ll d) {
-    queue<pll> q;
-    q.emplace(n, 0);
+    queue<pll> q = {};
     array<bool, 9> visited = { false };
     ll target = ((n % 3 == 0) && (d % 3 == 0) ? 3 : 1);
 
@@ -58,7 +54,6 @@ pll solve(ll n, ll d) {
 int main() {
     uint T;
     cin >> T;
-    T = 1; //DB
 
     for(uint j = 0; j < T; ++j) {
         ll n, d;
