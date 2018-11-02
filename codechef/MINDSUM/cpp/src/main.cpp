@@ -1,11 +1,14 @@
 #include <iostream>
 #include <queue>
-#include <unordered_map>
+#include <map>
 
 using namespace std;
 
 using ll = long long;
 using pll = pair<ll, ll>;
+using uint = unsigned int;
+
+const uint MAX_OPS = 100'000;
 
 ll digitsum(ll n, ll acc = 0) {
     if (n == 0) return acc;
@@ -14,30 +17,25 @@ ll digitsum(ll n, ll acc = 0) {
 
 pll solve(ll n, ll d) {
     queue<pll> q;
-    unordered_map<ll, ll> m;
+    map<ll, ll> m;
     q.emplace(n, 0);
 
-    ll target = ((n % 3 == 0 && d % 3 == 0) ? 3 : 1);
-
-    while (!q.empty()) {
+    for (uint i = 0; i < MAX_OPS && !q.empty(); ++i) {
         ll n = q.front().first;
         ll ops = q.front().second;
         q.pop();
 
-        if (n < 10) {
-            if (n == target) {
-                return { n, ops };
-            }
-            else if (m.find(n) == m.end()) {
+        if (m.find(n) == m.end()) {
+            if (n < 10) {
                 m[n] = ops;
-                q.emplace(n + d, ops + 1);
             }
-        }
-        else {
-            q.emplace(digitsum(n), ops + 1);
+            else {
+                q.emplace(digitsum(n), ops + 1);
+            }
             q.emplace(n + d, ops + 1);
         }
     }
+    return { m.begin()->first, m.begin()->second };
 }
 
 int main() {
