@@ -5,78 +5,49 @@
 
 using namespace std;
 
-class Solution {
-public:
-    int minFallingPathSum(const vector<vector<int>>& A) {
-        vector<ll> output;
-        findSums(A, output);
-    }
-    void findSums(const vector<vector<int>>& input,
-                  const vector<int>& output,
-                  size_t crVecPos = 0,
-                  size_t crPos = 0) {
-        // some aliases
-        auto& crVec = input[crVecPos];
-        auto crEle  = crVec[crPos];
+using ll = long long;
 
-        // base case
-        if (crVecPos == input.size() - 1) {
-            crEle;
-        }
-
-        // left sum
-        if (leftPos >= 0)
-            output.push_back(crEle + solve(input, crVecPos + 1, crPos - 1));
-        // center sum
-        centerSum = crEle + solve(input, crVecPos + 1, crPos);
-        // right sum 
-        if (rightPos < crVec.size()) 
-            output.push_back(crEle + solve(input, crVecPos + 1, crPos + 1));
+void solve(const vector<vector<ll>>& input,
+           vector<ll>& output,
+           vector<vector<ll>>::iterator vecItr,
+           vector<ll>::iterator itr,
+           ll acc) {
+    if (vecItr == end(input)) {
+        output.push_back(acc);
     }
-};
-
-vector<vector<int>> parse(vector<vector<int>>& acc,
-                          vector<int>& currAcc,
-                          const string& str,
-                          bool endFlag) {
-    if (str.front() == ']') {
-        if (endFlag)
-            return acc;
-        else {
-            acc.push_back(currAcc);
-            currAcc = {};
-        }
-    }
-    // not a ]: reset *endFlag*
     else {
-        endFlag = false;
-        if (isdigit(str.front())) {
-            currAcc.push_back(int(str.front() - '0'));
-        }
-        else if (str.empty()) {
-            assert(false);
-        }
+        // center
+        solve(input, output, next(vecItr), itr, acc + *itr);
+        // left
+        if (prev(itr) != rend(/*TODO*/))
+            solve(input, output, next(vecItr), prev(itr), acc + *itr);
+        // right
+        if (next(itr) != end(/*TODO*/))
+            solve(input, output, next(vecItr), next(itr), acc + *itr);
     }
-    // continue
-    return parse(acc, currAcc, str.substr(1), endFlag);
 }
 
-auto parse(const string& str) {
-    vector<vector<int>> acc;
-    vector<int> firstAcc;
-    return parse(acc, firstAcc, str, false);
+void solve(const vector<vector<ll>>& input,
+           vector<ll>& output) {
+    return solve(input, output, begin(input), begin(input.front()), 0L);
 }
 
 int main() {
-    auto vv = parse("[[1]]");
+    vector<vector<ll>> input = {
+        {1, 2, 3},
+        {4, 5, 6},
+        {7, 8, 9}
+    };
 
-    for (const auto& v : vv) {
-        for (const auto& e : v) {
-            cout << e << ", ";
+    vector<ll> output;
+    solve(input, output);
+
+    for (const auto& row : output) {
+        for (const auto& ele : row) {
+            cout << ele << ", ";
         }
-        cout << endl;
+        cout << "\n";
     }
-    cout << endl;
 
     return 0;
 }
