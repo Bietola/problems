@@ -3,64 +3,50 @@
 #include <memory>
 #include <algorithm>
 #include <cassert>
+#include <limits>
 
 using namespace std;
 
 using ll = long long;
+template <class T, size_t size> using a = array<T, size>;
+template <class T, size_t size1, size_t size2> using a2d = array<array<T, size1>, size2>;
 
-void getFallingSums(const vector<vector<ll>>& input,
-                    vector<ll>& output,
-                    vector<vector<ll>>::const_iterator vecItr,
-                    vector<ll>::const_iterator itr,
-                    ll acc) {
-    auto newAcc = acc + *itr;
+/* const constexpr static int inf = numeric_limits<int>::max(); */
+const constexpr static int inf = numeric_limits<int>::max();
 
-    if (vecItr == prev(cend(input))) {
-        output.push_back(newAcc);
+template <size_t size>
+int solve(a2d<int, size, size>& input) {
+    for (int rowi = input.size() - 2; rowi >= 0; --rowi) {
+        auto& row = input[rowi];
+        auto& nextRow = input[rowi + 1];
+        for (size_t elei = 0; elei < row.size(); ++elei) {
+            auto& ele = row[elei];
+            auto leftEle = (elei == 0 ? inf : nextRow[elei - 1]);
+            auto rightEle = (elei == row.size() - 1 ? inf : nextRow[elei + 1]);
+            auto centerEle = nextRow[elei];
+            ele += min(min(leftEle, rightEle), centerEle);
+        }
     }
-    else {
-        // construct next things
-        auto nextVecItr = next(vecItr);
-        auto nextItr = cbegin(*next(vecItr)) + distance(cbegin(*vecItr), itr);
-        // recurse center
-        getFallingSums(input, output, next(vecItr), nextItr, newAcc);
-        // recurse left
-        if (prev(nextItr) != prev(cbegin(*nextVecItr)))
-            getFallingSums(input, output, next(vecItr), prev(nextItr), newAcc);
-        // recurse right
-        if (next(nextItr) != cend(*nextVecItr))
-            getFallingSums(input, output, next(vecItr), next(nextItr), newAcc);
-    }
+    const auto& firstRow = input[0];
+    return *min_element(begin(firstRow), end(firstRow));
 }
 
-ll solve(const vector<vector<ll>>& input) {
-    // get all sums
-    vector<ll> sums;
-    const auto& toprow = *cbegin(input);
-    for (auto itr = cbegin(toprow); itr != cend(toprow); ++itr) {
-        getFallingSums(input, sums, cbegin(input), itr, 0ll);
-    }
-
-    /* // DB */
-    /* for (const auto& ele : sums) { */
-    /*     cout << ele << ", "; */
-    /* } */
-    /* cout << endl; */
-    /* // END DB */
-
-    // return minimum
-    return *min_element(cbegin(sums), cend(sums));
-}
-
-int main() {
-    vector<vector<ll>> input = {
-        {63, 70, 79, 18},
-        {90, 16, -10, 32},
-        {100, 84, 59, -84},
-        {23, -3, 26, 69}
+main() {
+    a2d<int, 4, 4> input = {
+        63, 70, 79, 18,
+        90, 16, -10, 32,
+        100, 84, 59, -84,
+        23, -3, 26, 69
     };
 
-    cout << "minimum falling sum: " << solve(input) << "\n";
+    /* a2d<int, 3, 3> input = { */
+    /*     1, 2, 3, */
+    /*     4, 5, 6, */
+    /*     7, 8, 9 */
+    /* }; */
+
+    int solution = solve(input);
+    cout << "minimum falling sum: " << solution << endl;
 
     return 0;
 }
