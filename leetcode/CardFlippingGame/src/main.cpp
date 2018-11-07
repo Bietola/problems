@@ -19,6 +19,8 @@ int mean(int lhs, int rhs) {
 }
 // algorithms
 #define RN(_RANGE) begin(_RANGE), end(_RANGE)
+// functional
+const auto gti = greater<int>();
 // printing
 template <class T>
 ostream& operator<<(ostream& ostr, const vector<T>& toPrint) {
@@ -30,20 +32,27 @@ ostream& operator<<(ostream& ostr, const vector<T>& toPrint) {
     return ostr;
 }
 
+// SOLUTION
 int solve(const vi& fronts, const vi& backs) {
-    mxhi pq;
-    for (int ele : { 1, 2, 3, 4, 5, 6 }){
-        pq.push(ele);
-    }
+    vi heap;
 
-    while (!pq.empty()) {
-        cout << pq.top() << endl;
-        pq.pop();
-    }
+    copy(RN(fronts), back_inserter(heap));
+    copy(RN(backs), back_inserter(heap));
+
+    make_heap(RN(heap), gti);
 }
 
+// MAIN
 int main() {
     solve({1, 2, 3}, {11, 12, 13});
+
+    mxhi heap;
+    vi v = {1, 2, 3, 4};
+
+    while (!heap.empty()) {
+        cout << heap.top() << endl;
+        heap.pop();
+    }
 
     return 0;
 }
