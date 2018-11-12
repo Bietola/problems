@@ -1,4 +1,5 @@
 #include <iostream>
+#include <unordered_set>
 #include <set>
 #include <sstream>
 #include <vector>
@@ -14,10 +15,13 @@ using namespace std;
 // containers
 using vi = vector<int>;
 using vvi = vector<vi>;
+using pi = pair<int, int>;
+using vpi = vector<pi>;
 // math
 int mean(int lhs, int rhs) {
     return (lhs + rhs) / 2;
 }
+constexpr const int intinf = numeric_limits<int>::max();
 // ranges
 #define RN(_RANGE) begin(_RANGE), end(_RANGE)
 // loops
@@ -25,9 +29,10 @@ int mean(int lhs, int rhs) {
 #define FORK(_START, _FINISH) for (int k = _START; k < _FINISH; ++k)
 #define FORX(_START, _FINISH) for (int x = _START; x < _FINISH; ++x)
 #define FORY(_START, _FINISH) for (int y = _START; y < _FINISH; ++y)
+
 // matrices
 template <class Board>
-bool iob(const Board& board, int x, int y) {
+bool iob(int x, int y, const Board& board) {
     return x >= 0 && y >= 0 && x < board.size() && y < board.size();
 }
 // printing
@@ -41,62 +46,68 @@ ostream& operator<<(ostream& ostr, const vector<T>& toPrint) {
     return ostr;
 }
 
-void findIsland(const vvi& board, int sx, int sy,
-                set<pair<int, int>>& output) {
-    auto dirs = array<pair<int, int>, 4>{ { {0, -1}, {1, 0}, {0, 1}, {-1, 0} } };
+using Island = set<pi>;
+
+// returns snake distance
+int snakeDistance(const pi& lhs, const pi& rhs) {
+    return abs(lhs.first - rhs.first) + abs(lhs.second - rhs.second) - 1;
+}
+
+// finds an island
+void findIsland(Island& output, const vvi& board, int sx, int sy) {
+    static vpi dirs = { {1, 0}, {-1, 0}, {0, 1}, {0, -1} };
+
+    output.emplace(sx, sy);
 
     for (const auto& dir : dirs) {
-        int nx = sx + dir.first;
-        int ny = sy + dir.second;
-        if (iob(board, nx, ny) &&
-                output.find({ nx, ny }) == end(output) && board[ny][nx] == 1) {
-            output.emplace(nx, ny);
-            findIsland(board, nx, ny, output);
-        }
+        int nx = dir.first + sx;
+        int ny = dir.second + sy;
+        if (iob(nx, ny, board) && !output.count({ nx, ny }) && board[ny][nx] == 1)
+            findIsland(output, board, nx, ny);
     }
 }
 
-int solve(const vvi& board)  {
-    // find islands
-    set<pair<int, int>> island1, island2;
+// returns minimum number of land patches needed for connection
+int solve(const vvi& board) {
+    Island firstIsland, secondIsland;
     FORY (0, board.size()) {
-        FORX (0, board[y].size()) {
-            if (board[y][x] == 1) {
-                if (island1.empty()) {
-                    findIsland(board, x, y, island1);
-                }
-                else if(island1.find({ x, y }) == end(island1)) {
-                    findIsland(board, x, y, island2);
-                    goto endloop;
-                }
+        FORX (0, board[0].size()) {
+            auto ele = board[y][x];
+            if (firstIsland.empty() && ele == 1) {
+                findIsland(firstIsland, board, x, y);
+            }
+            else if (!firstIsland.count({ x, y }) && ele == 1) {
+                findIsland(secondIsland, board, x, y);
+                goto endloop;
             }
         }
     }
 endloop:
-    for (const auto& ele : island1)
-        cout << ele.first << ", " << ele.second << "| ";
-    cout << endl;
-    for (const auto& ele : island2)
-        cout << ele.first << ", " << ele.second << "| ";
-    cout << endl;
+    int ret = intinf;
+    for (const auto& sq1 : firstIsland) {
+        for (const auto& sq2 : secondIsland) {
+            auto dist = snakeDistance(sq1, sq2);
+            if (dist < ret) ret = dist;
+        }
+    }
+    return ret;
 }
 
 int main() {
     vvi board;
-
     string line;
-    while (getline(cin, line)) {
-        vi row;
+    while(getline(cin, line)) {
         stringstream ss;
         ss << line;
-        int n;
-        while (ss >> n) {
-            row.push_back(n);
+        int ele;
+        vi row;
+        while (ss >> ele) {
+            row.push_back(ele);
         }
         board.push_back(row);
     }
 
-    solve(board);
+    cout << solve(board) << endl;
 
     return 0;
 }
