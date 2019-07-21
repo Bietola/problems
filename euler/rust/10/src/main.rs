@@ -52,6 +52,6 @@ impl Iterator for PrimeItr {
 }
 
 fn main() {
-    let result: u64 = primes().take_while(|n| n < 2000000).sum();
+    let result: u64 = primes().take_while(|n| n < &2000000).sum();
     println!("{:?}", result);
 }
