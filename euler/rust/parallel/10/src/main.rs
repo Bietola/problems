@@ -22,11 +22,26 @@ fn is_prime(n: u64) -> bool {
 }
 
 fn primes() -> PrimeItr {
-    PrimeItr { last: 0 }
+    PrimeItr::new()
 }
 
 struct PrimeItr {
     last: u64,
+    cur_delta: u64,
+    next_delta: u64,
+}
+
+impl PrimeItr {
+    fn new() -> Self {
+        Self { last: 0, cur_delta: 2, next_delta: 4}
+    }
+
+    fn incr(&mut self) {
+        use std::mem::swap;
+
+        self.last += self.cur_delta;
+        swap(&mut self.cur_delta, &mut self.next_delta);
+    }
 }
 
 impl Iterator for PrimeItr {
@@ -38,11 +53,12 @@ impl Iterator for PrimeItr {
                 self.last = 2;
             } else if self.last == 2 {
                 self.last = 3;
+            } else if self.last == 3 {
+                self.last = 5;
             } else {
-                self.last += if self.last % 2 == 0 { 1 } else { 2 };
-
-                while !is_prime(self.last) {
-                    self.last += 2;
+                loop {
+                    self.incr();
+                    if is_prime(self.last) { break; }
                 }
             }
 
@@ -52,6 +68,6 @@ impl Iterator for PrimeItr {
 }
 
 fn main() {
-    let result: u64 = primes().take_while(|n| n < 2000000).sum();
+    let result: u64 = primes().take_while(|n| n < &2_000_000).sum();
     println!("{:?}", result);
 }
