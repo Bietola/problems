@@ -25,7 +25,15 @@ struct Pict {
 }
 
 fn interest_rating(pict1: &Pict, pict2: &Pict) -> usize {
-    unimplemented!()
+    use std::cmp::min;
+
+    min(
+        pict1.tags.difference(&pict2.tags).count(),
+        min(
+            pict2.tags.difference(&pict1.tags).count(),
+            pict1.tags.intersection(&pict2.tags).count(),
+        ),
+    )
 }
 
 fn parse_input(path: &'static str) -> UnGraph<Pict, usize> {
@@ -36,28 +44,34 @@ fn parse_input(path: &'static str) -> UnGraph<Pict, usize> {
     raw.lines().skip(1).for_each(|line| {
         let words: Vec<_> = line.split_whitespace().collect();
 
-        let new_index = result.add_node(Pict {
+        let new_node = Pict {
             ornt: if words[0] == "H" { Ornt::H } else { Ornt::V },
             tags: words.into_iter().skip(2).map(&str::to_owned).collect(),
-        });
+        };
+        let new_idx = result.add_node(new_node.clone());
 
-        result.extend_with_edges(result.node_indices().filter_map(|old_index| {
-            if old_index == new_index {
-                None
-            } else {
-                Some((
-                    old_index,
-                    new_index,
-                    interest_rating(
-                        result.node_weight(old_index).unwrap(),
-                        result.node_weight(new_index).unwrap(),
-                    )
-                ))
-            }
-        }));
+        let new_edges: Vec<_> = result
+            .node_weights_mut()
+            .enumerate()
+            .filter_map(|(old_i_idx, old_node)| {
+                let old_idx = NodeIndex::new(old_i_idx);
+
+                if old_idx == new_idx {
+                    None
+                } else {
+                    Some((old_idx, new_idx, interest_rating(old_node, &new_node)))
+                }
+            })
+            .collect();
+
+        result.extend_with_edges(new_edges);
     });
 
     result
+}
+
+solve(input: UnGraph<Pict, usize>) {
+
 }
 
 fn main() {
