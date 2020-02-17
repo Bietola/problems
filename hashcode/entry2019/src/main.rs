@@ -22,6 +22,7 @@ impl Default for Ornt {
 
 #[derive(Debug, Default, Clone)]
 struct Pict {
+    id: usize,
     ornt: Ornt,
     tags: HashSet<String>,
 }
@@ -77,7 +78,7 @@ where
                 Some((old_idx, new_idx, connect_fun(old_node, &new_node)))
             }
         })
-    .collect();
+        .collect();
 
     graph.extend_with_edges(new_edges);
 }
@@ -88,41 +89,57 @@ fn parse_input(path: &'static str) -> UnGraph<Slide, usize> {
     let mut result = Graph::new_undirected();
     let mut vpicts = Vec::<Pict>::new();
 
-    raw.lines().skip(1).for_each(|line| {
-        let words: Vec<_> = line.split_whitespace().collect();
+    raw.lines()
+        .skip(1)
+        .enumerate()
+        .for_each(|(curr_pict_id, line)| {
+            let words: Vec<_> = line.split_whitespace().collect();
 
-        let ornt = if words[0] == "H" { Ornt::H } else { Ornt::V };
+            let ornt = if words[0] == "H" { Ornt::H } else { Ornt::V };
 
-        let new_node = Pict {
-            ornt,
-            tags: words.into_iter().skip(2).map(&str::to_owned).collect(),
-        };
+            let new_node = Pict {
+                id: curr_pict_id,
+                ornt,
+                tags: words.into_iter().skip(2).map(&str::to_owned).collect(),
+            };
 
-        if ornt == Ornt::V {
-            // Create new node for every vertical picture already parsed (combined with the new
-            // one).
-            for vpict in vpicts.iter() {
-                // Every node created this way is still connected to every other node (the graph is
-                // kept complete).
-                add_node_and_complete(&mut result, Slide::V2(new_node.clone(), vpict.clone()), interest_rating);
+            if ornt == Ornt::V {
+                // Create new node for every vertical picture already parsed (combined with the new
+                // one).
+                // NB. exclude new picture from pair up
+                for vpict in vpicts.iter().filter(|vpict| vpict.id != new_node.id) {
+                    // Every node created this way is still connected to every other node (the graph is
+                    // kept complete).
+                    add_node_and_complete(
+                        &mut result,
+                        Slide::V2(new_node.clone(), vpict.clone()),
+                        interest_rating,
+                    );
+                }
+
+                // Remember vertical picture parsed to repeat the process.
+                vpicts.push(new_node);
+            } else {
+                add_node_and_complete(&mut result, Slide::O1(new_node), interest_rating);
             }
-
-            // Remember vertical picture parsed to repeat the process.
-            vpicts.push(new_node);
-        } else {
-            add_node_and_complete(&mut result, Slide::O1(new_node), interest_rating);
-        }
-    });
+        });
 
     result
 }
 
 fn solve(input: UnGraph<Pict, usize>) {
-    unimplemented!()
+
 }
 
 fn main() {
     let picts = parse_input("res/input");
 
-    println!("{:?}", Dot::with_config(&picts, &[]));
+    println!("{:?}", Dot::with_config(&picts, &[Config::NodeIndexLabel]));
+    println!(
+        "graph:\n{:#?}",
+        picts
+            .node_indices()
+            .map(|idx| picts.node_weight(idx))
+            .collect::<Vec<_>>()
+    );
 }

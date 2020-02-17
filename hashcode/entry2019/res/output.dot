@@ -1,9 +1,57 @@
 graph {
-    0 [label="O1(Pict { ornt: H, tags: {\"cat\", \"beach\", \"sun\"} })"]
-    1 [label="V2(Pict { ornt: V, tags: {\"garden\", \"selfie\"} }, Pict { ornt: V, tags: {\"selfie\", \"smile\"} })"]
-    2 [label="O1(Pict { ornt: H, tags: {\"garden\", \"cat\"} })"]
+    0
+    1
+    2
     0 -- 1 [label="0"]
     0 -- 2 [label="1"]
     1 -- 2 [label="1"]
 }
 
+graph:
+[
+    Some(
+        O1(
+            Pict {
+                id: 0,
+                ornt: H,
+                tags: {
+                    "beach",
+                    "cat",
+                    "sun",
+                },
+            },
+        ),
+    ),
+    Some(
+        V2(
+            Pict {
+                id: 2,
+                ornt: V,
+                tags: {
+                    "garden",
+                    "selfie",
+                },
+            },
+            Pict {
+                id: 1,
+                ornt: V,
+                tags: {
+                    "smile",
+                    "selfie",
+                },
+            },
+        ),
+    ),
+    Some(
+        O1(
+            Pict {
+                id: 3,
+                ornt: H,
+                tags: {
+                    "garden",
+                    "cat",
+                },
+            },
+        ),
+    ),
+]
