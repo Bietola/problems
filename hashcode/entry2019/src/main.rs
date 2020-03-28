@@ -127,8 +127,32 @@ fn parse_input(path: &'static str) -> UnGraph<Slide, usize> {
     result
 }
 
-fn solve(input: UnGraph<Pict, usize>) {
+fn mult_vert_check(inter_gr: &UnGraph<Pict, usize>, cur_node_i: usize, cur_path: &Vec<usize>) -> bool {
+    unimplemented!()
+}
 
+fn solve_impl(inter_gr: &UnGraph<Pict, usize>, cur_path: Vec<usize>, cur_node_i: usize, visited: HashSet<usize>, out: &mut Vec<Vec<usize>>) {
+    if cur_path.len() == inter_gr.node_count() {
+        // TODO: Keep longest
+        out.push(cur_path);
+        return;
+    }
+
+    if visited.contains(&cur_node_i) { return; }
+
+    if mult_vert_check(inter_gr, cur_node_i, &cur_path) { return; }
+
+    let cur_path = {
+        let cur_path = cur_path.clone();
+        cur_path.push(cur_node_i);
+        cur_path
+    };
+
+    visited.insert(cur_node_i);
+}
+
+fn solve(input: UnGraph<Pict, usize>) {
+    unimplemented!()
 }
 
 fn main() {
