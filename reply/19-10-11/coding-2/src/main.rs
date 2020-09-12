@@ -1,6 +1,9 @@
-mod aln {
-    use min_max_macros::*;
+#![feature(cmp_min_max_by)]
 
+#[macro_use] extern crate educe;
+#[macro_use] extern crate cmp_macros;
+
+mod aln {
     /*************************/
     /* Matrix utility struct */
     /*************************/
@@ -48,6 +51,40 @@ mod aln {
         Sub(char, char),
     }
 
+    #[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
+    enum Dir {
+        W,
+        N,
+        NW,
+    }
+
+    #[derive(Clone, Educe)]
+    #[educe(PartialEq, Eq, PartialOrd, Ord)]
+    struct MatCell {
+        score: i32,
+
+        #[educe(Ord(ignore))]
+        origin: Option<Dir>,
+    }
+
+    impl MatCell {
+        fn branch(&self, branch_score: i32, origin: Dir) -> MatCell {
+            MatCell {
+                score: self.score + branch_score,
+                origin: Some(origin),
+            }
+        }
+    }
+
+    impl From<i32> for MatCell {
+        fn from(score: i32) -> Self {
+            MatCell {
+                score,
+                origin: None,
+            }
+        }
+    }
+
     #[derive(Debug, PartialEq)]
     pub struct Allignment<'a> {
         strings: (&'a str, &'a str),
@@ -72,30 +109,30 @@ mod aln {
 
         let colsn = rowstr.len();
         let rowsn = colstr.len();
-        let mut dmat = Matrix::from_scalar(0, rowsn, colsn);
+        let mut dmat = Matrix::from_scalar(MatCell::from(0), rowsn, colsn);
 
         // Init first cell.
         *dmat.at_mut(0, 0) = if rowstr[0] == colstr[0] {
-            same_score
+            MatCell::from(same_score)
         } else {
-            sub_score
+            MatCell::from(sub_score)
         };
 
         // Init first row.
         for r in 1..rowsn {
             *dmat.at_mut(r, 0) = if rowstr[r] == colstr[0] {
-                dmat.at(r - 1, 0) + same_score
+                dmat.at(r - 1, 0).branch(same_score, Dir::W)
             } else {
-                dmat.at(r - 1, 0) + gap_score
+                dmat.at(r - 1, 0).branch(gap_score, Dir::W)
             }
         }
 
         // Init first column.
         for c in 1..colsn {
             *dmat.at_mut(0, c) = if colstr[c] == rowstr[0] {
-                dmat.at(0, c - 1) + same_score
+                dmat.at(0, c - 1).branch(same_score, Dir::N)
             } else {
-                dmat.at(0, c - 1) + gap_score
+                dmat.at(0, c - 1).branch(gap_score, Dir::N)
             }
         }
 
@@ -104,21 +141,25 @@ mod aln {
         for r in 1..rowsn {
             for c in 1..colsn {
                 let diag = dmat.at(r - 1, c - 1);
-                let up = dmat.at(r, c - 1);
-                let left = dmat.at(r - 1, c);
+                let north = dmat.at(r, c - 1);
+                let west = dmat.at(r - 1, c);
 
-                *dmat.at_mut(r, c) = max!(
+                use std::cmp::max;
+                *dmat.at_mut(r, c) = max(
                     if rowstr[r - 1] == colstr[c - 1] {
-                        diag + same_score
+                        diag.branch(same_score, Dir::NW)
                     } else {
-                        diag + sub_score
+                        diag.branch(sub_score, Dir::NW)
                     },
-                    up + gap_score,
-                    left + gap_score
+                    max(
+                        north.branch(gap_score, Dir::N),
+                        west.branch(gap_score, Dir::W),
+                    ),
                 );
 
                 // Keep track of max allignment.
-                if dmat.at(r, c) == dmat.at_tpl(max_allignment) {
+                // TODO: consider multiple candidates.
+                if dmat.at(r, c) > dmat.at_tpl(max_allignment) {
                     max_allignment = (r, c);
                 }
             }
@@ -128,15 +169,19 @@ mod aln {
         backtrack(&dmat, max_allignment)
     }
 
-    fn backtrack<'a, T>(dmat: &Matrix<T>, (sr, sc): (usize, usize)) -> Allignment<'a> {
-        backtrack(dmat,
+    fn backtrack<'a, T>(dmat: &Matrix<T>, (sr, sc): (usize, usize)) -> Allignment<'a>
+    where
+        T: Ord,
+    {
+        backtrack(
+            dmat,
             max!(
-                using |(r, c)| dmat.at(r, c);
+                by_key: |(r, c)| dmat.at(*r, *c);
 
                 (sr - 1, sc - 1),
                 (sr - 1, sc),
                 (sr, sc - 1),
-            )
+            ),
         )
     }
 

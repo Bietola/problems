@@ -8,4 +8,5 @@ edition = "2018"
 
 [dependencies]
 
-min_max_macros = "0.1.1"
+educe = "0.4.13"
+cmp_macros = { git = "https://github.com/Bietola/cmp_macros" }
