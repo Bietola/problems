@@ -205,7 +205,7 @@ fn backtrack<'a>(
         });
 
         // Backtrack pos.
-        // TODO: Add Into traits to tuple library to simplify ridiculous type conversion.
+        // TODO: Add Into traits to tuple library to simplify this ridiculous type conversion.
         pos = (pos.map(|e| e as i32) + origin.to_pair()).map(|e| e as usize);
     }
 
@@ -218,6 +218,48 @@ fn backtrack<'a>(
 #[cfg(test)]
 mod tests {
     use super::*;
+    use pretty_assertions::assert_eq;
+
+    #[test]
+    fn test_backtrack_simple() {
+        use Dir::*;
+        use Pair::*;
+
+        let s = move |x| Some(x);
+        let n = None;
+
+        let info = AllignmentInfo {
+            rowstr: b"hell",
+            colstr: b"celal",
+            same_score: 1,
+            sub_score: -1,
+            gap_score: -2,
+        };
+        assert_eq!(
+            backtrack(
+                info.clone(),
+                &Matrix {
+                    #[rustfmt::skip]
+                    contents: vec![
+                        (-1, n), (-3, n), (-5, n), (-7, n),
+                        (-3, n), (0, s(NW)), (-2, s(W)), (-1, s(W)),
+                        (-7, n), (-4, s(N)), (-1, s(NW)), (0, s(NW)),
+                        (-9, n), (-6, s(N)), (-3, s(N)), (0, s(NW)),
+                    ]
+                    .into_iter()
+                    .map(|(score, origin)| MatCell { score, origin })
+                    .collect(),
+                    width: 4,
+                    height: 5,
+                },
+                T2(3, 3),
+            ),
+            Allignment {
+                info,
+                contents: vec![Sub('h', 'c'), Same, Same, Gap1('a'), Same,]
+            }
+        );
+    }
 
     #[test]
     fn test_single_gap() {
