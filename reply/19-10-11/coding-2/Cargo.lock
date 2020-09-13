@@ -17,6 +17,7 @@ version = "0.1.0"
 dependencies = [
  "cmp_macros",
  "educe",
+ "tuple",
 ]
 
 [[package]]
@@ -93,6 +94,12 @@ dependencies = [
 ]
 
 [[package]]
+name = "serde"
+version = "1.0.116"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "96fe57af81d28386a513cbc6858332abc6117cfdb5999647c6444b8f43a370a5"
+
+[[package]]
 name = "syn"
 version = "1.0.40"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -101,6 +108,16 @@ dependencies = [
  "proc-macro2",
  "quote",
  "unicode-xid",
+]
+
+[[package]]
+name = "tuple"
+version = "0.5.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "9729a0e419bc750d6b23717818643b9dda92037830257e00f3f5c4da15353896"
+dependencies = [
+ "num-traits",
+ "serde",
 ]
 
 [[package]]

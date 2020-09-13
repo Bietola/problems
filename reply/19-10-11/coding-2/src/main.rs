@@ -1,12 +1,29 @@
 #![feature(cmp_min_max_by)]
 
-#[macro_use] extern crate educe;
-#[macro_use] extern crate cmp_macros;
-
 mod aln {
+    use educe::*;
+    use tuple::*;
+
     /*************************/
     /* Matrix utility struct */
     /*************************/
+
+    #[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
+    enum Dir {
+        N,
+        W,
+        NW,
+    }
+
+    impl Dir {
+        fn to_pair(&self) -> T2<i32, i32> {
+            match self {
+                N => T2(0, -1),
+                W => T2(-1, 0),
+                NW => T2(-1, -1),
+            }
+        }
+    }
 
     struct Matrix<T> {
         contents: Vec<T>,
@@ -51,13 +68,6 @@ mod aln {
         Sub(char, char),
     }
 
-    #[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
-    enum Dir {
-        W,
-        N,
-        NW,
-    }
-
     #[derive(Clone, Educe)]
     #[educe(PartialEq, Eq, PartialOrd, Ord)]
     struct MatCell {
@@ -95,17 +105,20 @@ mod aln {
     /* Global allignment functions */
     /*******************************/
 
-    pub fn allign<'a>(
-        str1: &'a str,
-        str2: &'a str,
+    struct AllignmentInfo<'a> {
+        rowstr: &'a [u8],
+        colstr: &'a [u8],
         same_score: i32,
         sub_score: i32,
         gap_score: i32,
-    ) -> Allignment<'a> {
-        assert!(str1.is_ascii());
-        assert!(str2.is_ascii());
-        let rowstr = str1.as_bytes();
-        let colstr = str2.as_bytes();
+    }
+
+    pub fn allign<'a>(info: AllignmentInfo<'a>) -> Allignment<'a> {
+        let rowstr = info.rowstr;
+        let colstr = info.colstr;
+        let same_score = info.same_score;
+        let sub_score = info.sub_score;
+        let gap_score = info.gap_score;
 
         let colsn = rowstr.len();
         let rowsn = colstr.len();
@@ -166,23 +179,36 @@ mod aln {
         }
 
         // Backtrack from maximum allignment score to construct allignment.
-        backtrack(&dmat, max_allignment)
+        backtrack(info, &dmat, max_allignment)
     }
 
-    fn backtrack<'a, T>(dmat: &Matrix<T>, (sr, sc): (usize, usize)) -> Allignment<'a>
-    where
-        T: Ord,
-    {
-        backtrack(
-            dmat,
-            max!(
-                by_key: |(r, c)| dmat.at(*r, *c);
+    fn backtrack<'a>(
+        info: AllignmentInfo<'a>,
+        dmat: &Matrix<MatCell>,
+        pos: T2<usize, usize>,
+    ) -> Allignment<'a> {
+        if let Some(origin) = dmat.at_tpl(pos.into()).origin {
+            let result = backtrack(info, dmat, pos.into() + origin.to_pair());
 
-                (sr - 1, sc - 1),
-                (sr - 1, sc),
-                (sr, sc - 1),
-            ),
-        )
+            let rowchar = info.rowstr[pos.0];
+            let colchar = info.rowstr[pos.1];
+            result.contents.push(match origin {
+                Dir::NW => {
+                    if rowchar == colchar {
+                        Pair::Same
+                    } else {
+                        Pair::Sub(rowchar as char, colchar as char)
+                    }
+                }
+
+                Dir::W => Pair::Gap1(rowchar as char),
+                Dir::N => Pair::Gap2(colchar as char),
+            })
+        }
+
+        Allignment {
+            contents: vec![Pair::Same],
+        }
     }
 
     #[cfg(test)]
