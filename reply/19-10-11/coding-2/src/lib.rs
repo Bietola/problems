@@ -16,6 +16,7 @@ enum Dir {
 
 impl Dir {
     fn to_pair(&self) -> T2<i32, i32> {
+        use Dir::*;
         match self {
             N => T2(0, -1),
             W => T2(-1, 0),
@@ -62,9 +63,9 @@ impl<T> Matrix<T> {
 #[derive(Debug, PartialEq)]
 pub enum Pair {
     Same,
-    Gap1(char),
-    Gap2(char),
-    Sub(char, char),
+    RowGap,
+    ColGap,
+    Sub,
 }
 
 #[derive(Clone, Educe)]
@@ -190,18 +191,18 @@ fn backtrack<'a>(
     while let Some(origin) = dmat.at_tpl(pos.into()).origin {
         // Allignment pair is added in accordance to the backtrack movement.
         let rowchar = info.rowstr[pos.0].clone();
-        let colchar = info.rowstr[pos.1].clone();
+        let colchar = info.colstr[pos.1].clone();
         aln_pairs.push(match origin {
             Dir::NW => {
                 if rowchar == colchar {
                     Pair::Same
                 } else {
-                    Pair::Sub(rowchar as char, colchar as char)
+                    Pair::Sub
                 }
             }
 
-            Dir::W => Pair::Gap1(rowchar as char),
-            Dir::N => Pair::Gap2(colchar.into()),
+            Dir::W => Pair::ColGap,
+            Dir::N => Pair::RowGap,
         });
 
         // Backtrack pos.
@@ -209,6 +210,7 @@ fn backtrack<'a>(
         pos = (pos.map(|e| e as i32) + origin.to_pair()).map(|e| e as usize);
     }
 
+    aln_pairs.reverse();
     Allignment {
         info,
         contents: aln_pairs,
@@ -218,7 +220,7 @@ fn backtrack<'a>(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use pretty_assertions::assert_eq;
+    // use pretty_assertions::assert_eq;
 
     #[test]
     fn test_backtrack_simple() {
@@ -241,9 +243,11 @@ mod tests {
                 &Matrix {
                     #[rustfmt::skip]
                     contents: vec![
+                        // TODO/CC: Think about recording backtrack when on edges.
                         (-1, n), (-3, n), (-5, n), (-7, n),
                         (-3, n), (0, s(NW)), (-2, s(W)), (-1, s(W)),
-                        (-7, n), (-4, s(N)), (-1, s(NW)), (0, s(NW)),
+                        (-5, n), (-2, s(N)), (1, s(NW)), (-1, s(NW)),
+                        (-7, n), (-4, s(N)), (-1, s(N)), (0, s(NW)),
                         (-9, n), (-6, s(N)), (-3, s(N)), (0, s(NW)),
                     ]
                     .into_iter()
@@ -252,11 +256,11 @@ mod tests {
                     width: 4,
                     height: 5,
                 },
-                T2(3, 3),
+                T2(3, 4),
             ),
             Allignment {
                 info,
-                contents: vec![Sub('h', 'c'), Same, Same, Gap1('a'), Same,]
+                contents: vec![Sub, Same, Same, RowGap, Same,]
             }
         );
     }
@@ -276,7 +280,7 @@ mod tests {
             allign(info.clone()),
             Allignment {
                 info,
-                contents: vec![Same, Same, Gap1('A'), Same, Same, Same,]
+                contents: vec![Same, Same, RowGap, Same, Same, Same,]
             }
         );
     }
