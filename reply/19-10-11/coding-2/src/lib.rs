@@ -157,17 +157,15 @@ pub fn allign<'a>(info: AllignmentInfo<'a>) -> Allignment<'a> {
             let north = dmat.at(r, c - 1);
             let west = dmat.at(r - 1, c);
 
-            use std::cmp::max;
-            *dmat.at_mut(r, c) = max(
+            use cmp_macros::*;
+            *dmat.at_mut(r, c) = max!(
                 if rowstr[r - 1] == colstr[c - 1] {
                     diag.branch(same_score, Dir::NW)
                 } else {
                     diag.branch(sub_score, Dir::NW)
                 },
-                max(
-                    north.branch(gap_score, Dir::N),
-                    west.branch(gap_score, Dir::W),
-                ),
+                north.branch(gap_score, Dir::N),
+                west.branch(gap_score, Dir::W),
             );
 
             // Keep track of max allignment.
