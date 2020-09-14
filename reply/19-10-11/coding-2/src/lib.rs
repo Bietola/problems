@@ -210,6 +210,33 @@ fn backtrack<'a>(
         pos = (pos.map(|e| e as i32) + origin.to_pair()).map(|e| e as usize);
     }
 
+    // Walk along edge.
+    let eval_pair = |T2(x, y)| {
+        if info.rowstr[x] == info.colstr[y] {
+            Pair::Same
+        } else {
+            Pair::Sub
+        }
+    };
+
+    if pos.0 == 0 {
+        while pos.1 != 0 {
+            aln_pairs.push(eval_pair(pos));
+            pos.1 -= 1;
+        }
+    } else if pos.1 == 0 {
+        while pos.0 != 0 {
+            aln_pairs.push(eval_pair(pos));
+            pos.0 -= 1;
+        }
+    } else {
+        panic!()
+    };
+
+    // Register final cell.
+    assert_eq!(pos, T2(0, 0));
+    aln_pairs.push(eval_pair(T2(0, 0)));
+
     aln_pairs.reverse();
     Allignment {
         info,
@@ -250,9 +277,9 @@ mod tests {
                         (-7, n), (-4, s(N)), (-1, s(N)), (0, s(NW)),
                         (-9, n), (-6, s(N)), (-3, s(N)), (0, s(NW)),
                     ]
-                    .into_iter()
-                    .map(|(score, origin)| MatCell { score, origin })
-                    .collect(),
+                        .into_iter()
+                        .map(|(score, origin)| MatCell { score, origin })
+                        .collect(),
                     width: 4,
                     height: 5,
                 },
