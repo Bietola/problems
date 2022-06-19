@@ -4,10 +4,9 @@ import fire
 
 
 def solve(upper):
-    return sum(takewhile(lambda x: abs(x) < upper, map(
-        lambda x: x / 2 if x % 15 == 0 else x,
-        merge(count(3, 3), count(5, 5))
-    )))
+    return sum(takewhile(lambda x: x < upper,
+                         merge(count(3, 3), count(5, 5))))
+    - sum(takewhile(lambda x: x < upper, count(15, 15)))
 
 
 def cli(upper):
