@@ -1,3 +1,6 @@
 [submodule "euler/cpp/parallel/1/src/utils"]
 	path = euler/cpp/parallel/1/src/utils
 	url = https://www.github.com/Bietola/utils
+[submodule "jobs/gdlauncher-entry"]
+	path = jobs/gdlauncher-entry
+	url = https://github.com/Bietola/gdlauncher-entry
